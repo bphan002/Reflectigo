@@ -39,6 +39,12 @@ export default function TabLayout() {
           ),
         }}
       />
+            <Tabs.Screen
+        name="imagepicker"
+        options={{
+          title: 'imagepicker',
+        }}
+      />
     </Tabs>
   );
 }
