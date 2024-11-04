@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
-
+import AntDesign from '@expo/vector-icons/AntDesign';
 
 export default function TabLayout() {
   return (
@@ -20,6 +20,15 @@ export default function TabLayout() {
           ),
         }}
       />
+<Tabs.Screen
+  name="createtrip"
+  options={{
+    title: 'Create Trip',
+    tabBarIcon: ({ color, focused }) => (
+      <AntDesign name="pluscircleo" color={color} size={24} />
+    ),
+  }}
+/>
       <Tabs.Screen
         name="about"
         options={{
