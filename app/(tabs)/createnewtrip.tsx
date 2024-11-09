@@ -48,7 +48,7 @@ export default function CreateTrip() {
   return (
     <View style={{ padding: 20 }}>
     {/* <CloseButton/> */}
-      <Text style={{ fontSize: 18 }}>Where to?</Text>
+      <Text style={{ fontSize: 18 }}>Where toooooo?</Text>
       <TextInput
         style={{
           borderWidth: 1,

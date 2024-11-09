@@ -20,19 +20,11 @@ export default function TabLayout() {
           ),
         }}
       />
-<Tabs.Screen
-  name="createtrip"
-  options={{
-    title: 'Create Trip',
-    tabBarIcon: ({ color, focused }) => (
-      <AntDesign name="pluscircleo" color={color} size={24} />
-    ),
-  }}
-/>
       <Tabs.Screen
-        name="about"
+        name="createnewtrip"
         options={{
-          title: 'About',
+          
+          title: 'Create Trip',
           tabBarIcon: ({ color, focused }) => (
             /* @tutinfo */
             <Ionicons name={focused ? 'information-circle' : 'information-circle-outline'} color={color} size={24}/>

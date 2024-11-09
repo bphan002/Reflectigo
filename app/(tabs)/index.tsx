@@ -1,13 +1,18 @@
 import { Text, View, StyleSheet } from 'react-native';
-/* @tutinfo Import <CODE>Link</CODE> component from <CODE>expo-router</CODE>. */ import { Link } from 'expo-router'; 
+import { useState } from 'react'
+import Button from '@/components/Button';
+import { useRouter, Link } from 'expo-router'; 
 
 export default function Index() {
+  const [ user, setUser] = useState('Billy')
+  const router = useRouter(); // Use useRouter for navigation
+  //will need useEffect probably to get username
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Home screen</Text>
-      <Link href="/about" style={styles.button}>
-        Go to About screen
-      </Link>
+      <Text style={styles.text}>Hi {user},</Text>
+      <Text style={styles.text}>Let's Travel!</Text>
+      <Button label="Create new trip" onPress={() => router.push('/createnewtrip')} />
+      <Text>Sample Trip Plan</Text>
     </View>
   );
 }
