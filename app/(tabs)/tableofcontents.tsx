@@ -5,15 +5,15 @@ export default function AboutScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Table of Contents</Text>
-      <Button label="Trip Overview" />
-      <Button label="Flight Details" />
-      <Button label="Daily Schedule" />
-      <Button label="Tours & Attractions" />
-      <Button label="Restaurants" />
+      <Button label="Flights" />
       <Button label="Hotels" />
+      <Button label="Itinerary" />
+      <Button label="Places to Explore" />
+      <Button label="Restaurants" />
       <Button label="Transportation" />
       <Button label="Outfits" />
       <Button label="Packing List" />
+      <Button label="Trip Highlights" />
     </View>
   );
 }
