@@ -4,10 +4,10 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 // import CloseButton from '../../components/CloseButton';
 import * as ImagePicker from "expo-image-picker"
 import Button from '@/components/Button';
-
-
+import { useRouter, Link } from 'expo-router'; 
 
 export default function CreateTrip() {
+  const router = useRouter(); // Use useRouter for navigation
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
@@ -45,6 +45,11 @@ export default function CreateTrip() {
     setEndDate(currentDate);
   };
 
+  const goToTravelItinerary = () => {
+    //put information in params when ready, name, date of trip, name of trip
+    router.push({ pathname: '/travelitinerary', params: { message: 'Hello from createnewtrip!' } });
+  };
+
   return (
     <View style={{ padding: 20 }}>
     {/* <CloseButton/> */}
@@ -52,7 +57,7 @@ export default function CreateTrip() {
       <TextInput
         style={{
           borderWidth: 1,
-          borderColor: '#ccc',
+          borderColor: 'red',
           padding: 10,
           marginVertical: 10,
           borderRadius: 5,
@@ -92,13 +97,15 @@ export default function CreateTrip() {
         />
       )}
 
-      <Button title="Save Trip" onPress={() => { /* Handle saving trip */ }} />
       <Text>(Optional)</Text>
       <Button
         onPress={pickImageAsync}
         label="Choose a photo"
 
       />
+      <Button label="Start Planning" onPress={goToTravelItinerary} 
+        />
+        { /* Handle saving trip and redirect */ }
     </View>
   );
 }
