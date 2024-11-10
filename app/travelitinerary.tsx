@@ -1,5 +1,6 @@
 import { Text, View, TouchableOpacity, Animated, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { Link } from 'expo-router';  // Import the Link component
 import React, { useState, useRef } from 'react';
 
 export default function AboutScreen() {
@@ -56,9 +57,10 @@ export default function AboutScreen() {
                             },
                         ]}
                     >
-                        <TouchableOpacity style={styles.button} onPress={() => console.log(`${option} clicked`)}>
+                        {/* Use Link for navigation */}
+                        <Link href={`/${option.replace(/\s+/g, '')}`} style={styles.linkButton}>
                             <Text style={styles.optionText}>{option}</Text>
-                        </TouchableOpacity>
+                        </Link>
                     </Animated.View>
                 ))}
 
@@ -122,4 +124,11 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
     },
+    linkButton: {
+        backgroundColor: '#007bff',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        marginBottom: 10,
+    }
 });
