@@ -26,7 +26,7 @@ export default function AboutScreen() {
         'Restaurants',
         'Places to Explore',
         'Itinerary',
-        'Hotel',
+        'Hotels',
         'Flights',
         'Trip Overview',
     ];
