@@ -19,16 +19,16 @@ export default function AboutScreen() {
       };
 
     const options = [
-        'Trip Overview',
-        'Flights',
-        'Hotel',
-        'Itinerary',
-        'Places to Explore',
-        'Restaurants',
-        'Transportation',
-        'Outfits',
-        'Packing List',
         'Trip Highlights',
+        'Packing List',
+        'Outfits',
+        'Transportation',
+        'Restaurants',
+        'Places to Explore',
+        'Itinerary',
+        'Hotel',
+        'Flights',
+        'Trip Overview',
     ];
     
     return (
