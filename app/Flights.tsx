@@ -22,7 +22,7 @@ const FlightInput = () => {
 
   const fetchFlightDetails = async (airlineCode, flightNumber) => {
     console.log("airline code", airlineCode, 'flightNumber', flightNumber)
-    const accessToken = '/////';
+    const accessToken = '';
     const url = `https://api.aviationstack.com/v1/flights?access_key=${accessToken}&airline_iata=${airlineCode}&flight_iata=${flightNumber}`;
 
     setLoading(true);
