@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, ActivityIndicator, StyleSheet } from 'react-native';
-
 // Example dictionary of airline names to IATA codes
 const airlineCodes = {
   "American Airlines": "AA",

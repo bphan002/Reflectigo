@@ -3,7 +3,7 @@ import { Text, View, StyleSheet } from 'react-native';
 export default function Hotel() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Hotel</Text>
+      <Text style={styles.text}>Add hotel or lodging</Text>
     </View>
   );
 }
