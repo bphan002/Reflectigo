@@ -1,14 +1,13 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { API_URL, GOOGLE_API_KEY } from '@env';
-import 'react-native-get-random-values';
 
 
 export default function Hotel() {
   const [lodgings, setLodgings] = useState([
-    { id: Date.now(), hotel: '', startDate: new Date(), endDate: new Date(), isEditing: true }, // First one starts in editing state
+    { id: Date.now(), hotel: '', startDate: new Date(), endDate: new Date(), isEditing: true },
   ]);
 
   const [isPickerVisible, setPickerVisible] = useState({ id: null, type: '' });
@@ -31,7 +30,7 @@ export default function Hotel() {
   const addLodging = () => {
     setLodgings((prevLodgings) => [
       ...prevLodgings,
-      { id: Date.now(), hotel: '', startDate: new Date(), endDate: new Date(), isEditing: true }, // New lodging starts in edit mode
+      { id: Date.now(), hotel: '', startDate: new Date(), endDate: new Date(), isEditing: true }, 
     ]);
   };
 
@@ -44,13 +43,10 @@ export default function Hotel() {
     );
   };
 
-  // Simulate saving all lodging to the database
-  const saveAllLodging = () => {
-    console.log('Saving all lodging to database:');
-    lodgings.forEach(lodging => {
-      console.log(lodging);  // Log each lodging entry to the console
-    });
-    alert('All lodging saved!');  // Simulate saving success
+  // Complete lodging saving (just a placeholder function)
+  const completeLodging = (lodging) => {
+    console.log('Saving lodging to database:', lodging);
+    alert(`Lodging for ${lodging.hotel} saved!`);
   };
 
   // Toggle editing mode for a lodging entry
@@ -80,9 +76,9 @@ export default function Hotel() {
               updateHotel(item.id, data.description);
             }}
             query={{
-              key: GOOGLE_API_KEY, // Replace with your Google Places API key
+              key: GOOGLE_API_KEY,
               language: 'en',
-              types: 'establishment', // Optional to limit results to places
+              types: 'establishment',
             }}
             fetchDetails={true}
             styles={{
@@ -102,7 +98,7 @@ export default function Hotel() {
           <Text style={styles.text}>Selected Place: {item.hotel || "Not Selected"}</Text>
           <Text style={styles.text}>Start Date: {item.startDate.toDateString()}</Text>
           <Text style={styles.text}>End Date: {item.endDate.toDateString()}</Text>
-          {/* Only show the "Edit" button if the hotel is selected */}
+      
           {item.hotel && (
             <TouchableOpacity
               style={styles.editButton}
@@ -139,9 +135,6 @@ export default function Hotel() {
       />
       <TouchableOpacity style={styles.addButton} onPress={addLodging}>
         <Text style={styles.addButtonText}>+ Add Another Lodging</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.saveAllButton} onPress={saveAllLodging}>
-        <Text style={styles.saveAllButtonText}>Save All Lodging</Text>
       </TouchableOpacity>
       <DateTimePickerModal
         isVisible={isPickerVisible.id !== null}
@@ -236,17 +229,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  saveAllButton: {
-    backgroundColor: '#28a745',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  saveAllButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
 });
-

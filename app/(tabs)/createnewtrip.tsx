@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, TextInput, Alert } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker'
-// import CloseButton from '../../components/CloseButton';
-import * as ImagePicker from "expo-image-picker"
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from "expo-image-picker";
 import Button from '@/components/Button';
-import { useRouter, Link } from 'expo-router'; 
+import { useRouter } from 'expo-router';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'; // Import the Google Places Autocomplete component
+import { GOOGLE_API_KEY } from '@env';
 
 export default function CreateTrip() {
-  const router = useRouter(); // Use useRouter for navigation
+  const router = useRouter(); 
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
@@ -31,7 +32,7 @@ export default function CreateTrip() {
     } else {
         alert("You did not select any image.");
     }
-};
+  };
 
   const handleConfirmStart = (event: React.SyntheticEvent, selectedDate: Date) => {
     const currentDate: Date = selectedDate || startDate;
@@ -52,19 +53,36 @@ export default function CreateTrip() {
 
   return (
     <View style={{ padding: 20 }}>
-    {/* <CloseButton/> */}
-      <Text style={{ fontSize: 18 }}>Where toooooo?</Text>
-      <TextInput
-        style={{
-          borderWidth: 1,
-          borderColor: 'red',
-          padding: 10,
-          marginVertical: 10,
-          borderRadius: 5,
-        }}
+      <Text style={{ fontSize: 18 }}>Where to?</Text>
+      {/* Google Places Autocomplete */}
+      <GooglePlacesAutocomplete
         placeholder="Enter destination"
-        value={destination}
-        onChangeText={setDestination}
+        onPress={(data, details = null) => {
+          setDestination(data.description);  // Set the selected destination
+          console.log('Selected place:', data, details);
+        }}
+        query={{
+          key: `${GOOGLE_API_KEY}`, 
+          language: 'en',
+          components: 'country:us'  // Optional: Restrict search to specific country
+        }}
+        styles={{
+          container: {
+            flex: 0,
+            marginVertical: 10,
+          },
+          textInput: {
+            height: 40,
+            borderColor: 'gray',
+            borderWidth: 1,
+            paddingLeft: 10,
+            borderRadius: 5,
+          },
+          listView: {
+            backgroundColor: 'white',
+            borderRadius: 5,
+          }
+        }}
       />
 
       {/* Start Date Picker */}
@@ -101,11 +119,8 @@ export default function CreateTrip() {
       <Button
         onPress={pickImageAsync}
         label="Choose a photo"
-
       />
-      <Button label="Start Planning" onPress={goToTravelItinerary} 
-        />
-        { /* Handle saving trip and redirect */ }
+      <Button label="Start Planning" onPress={goToTravelItinerary} />
     </View>
   );
 }
