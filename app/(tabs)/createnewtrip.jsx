@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Alert, Image, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Alert, Image, TouchableOpacity, ScrollView } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from "expo-image-picker";
 import Button from '@/components/Button';
@@ -56,38 +56,43 @@ export default function CreateTrip() {
     }
   };
 
-  // const handleConfirmStart = (event: React.SyntheticEvent, selectedDate: Date) => {
-  const handleConfirmStart = (selectedDate) => {
-    const currentDate = selectedDate;
-    // const currentDate: Date = selectedDate || startDate;
-    setShowStartPicker(false);
-    setStartDate(currentDate);
-  };
-
+  
   const handleImageSelect = (imageUrl) => {
     console.log('Selected image URL:', imageUrl);
     setPlaceImage(imageUrl);  // Save the selected image URL in state
+    Alert.alert("Image Selected", "You have successfully selected an image for your trip.");
   };
-
-  const handleConfirmEnd = (selectedDate) => {
+  
+  const handleConfirmStart = (e) => {
+    const selectedDate = new Date(e.nativeEvent.timestamp);
+    console.log("selectedDate", selectedDate)
+    setStartDate(selectedDate);
+  };
+  const handleConfirmEnd = (e) => {
+    const selectedDate = new Date(e.nativeEvent.timestamp);
   // const handleConfirmEnd = (event: React.SyntheticEvent, selectedDate : Date) => {
     // const currentDate = selectedDate || endDate;
-    const currentDate = selectedDate;
-    setShowEndPicker(false);
-    setEndDate(currentDate);
+    setEndDate(selectedDate);
   };
 
   const goToTravelItinerary = () => {
     //put information in params when ready, name, date of trip, name of trip
-    router.push({ pathname: '/travelitinerary', params: { 
-      message: 'Hello from createnewtrip!',
-      selectedImage: placeImage  // Pass only the selected image
-    } });
+    router.push({ 
+      pathname: '/travelitinerary', 
+        params: { 
+          destination: destination,
+          startDate: startDate,
+          endDate: endDate,
+          selectedImage: placeImage
+        } 
+    });
   };
 
   return (
     <>
- 
+    <ScrollView>
+
+
     <View style={{ padding: 20 }}>
       <Text style={{ fontSize: 18 }}>Where to?</Text>
       <GooglePlacesAutocomplete
@@ -136,11 +141,12 @@ export default function CreateTrip() {
       )} */}
 
       {/* Start Date Picker */}
-      <Button
+      {/* <Button
         title={`Start Date: ${startDate.toLocaleDateString()}`}
         onPress={() => setShowStartPicker(true)}
-      />
-      {showStartPicker && (
+      /> */}
+      <View>
+        <Text>Start of Trip</Text>
         <DateTimePicker
           required
           value={startDate}
@@ -148,14 +154,16 @@ export default function CreateTrip() {
           display="default"
           onChange={handleConfirmStart}
         />
-      )}
+
+      </View>
 
       {/* End Date Picker */}
-      <Button
+      {/* <Button
         title={`End Date: ${endDate.toLocaleDateString()}`}
         onPress={() => setShowEndPicker(true)}
-      />
-      {showEndPicker && (
+      /> */}
+        <View>
+          <Text>End of Trip</Text>
         <DateTimePicker
           required
           value={endDate}
@@ -163,14 +171,13 @@ export default function CreateTrip() {
           display="default"
           onChange={handleConfirmEnd}
         />
-      )}
+        </View>
 
       <Text>(Optional)</Text>
       <Button
         onPress={pickImageAsync}
-        label="Choose a photo"
+        label="Choose your own picture for your trip"
       />
-      <Button label="Start Planning" onPress={goToTravelItinerary} />
     </View>
     <View style={{ padding: 10 }}>
     <Text>Choose an image for your trip:</Text>
@@ -187,7 +194,9 @@ export default function CreateTrip() {
         );
       })}
     </View>
+  <Button label="Start Planning" onPress={goToTravelItinerary} />
   </View>
+  </ScrollView>
   </>
   );
 }

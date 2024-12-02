@@ -1,11 +1,42 @@
-import { Text, View, TouchableOpacity, Animated, StyleSheet } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { Text, View, TouchableOpacity, Animated, StyleSheet, ImageBackground } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Link } from 'expo-router';  // Import the Link component
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 
-export default function AboutScreen() {
-    const { message } = useLocalSearchParams();
+export default function TravelItinerary() {
+    const { destination, startDate, endDate, selectedImage } = useLocalSearchParams();
     const [expanded, setExpanded] = useState(false);
+    const [tripData, setTripData] = useState(null) //this will be what we get from DB
+
+    //will be used once we implement database
+    // useEffect(() => {
+    //     if (!selectedImage) {
+    //       // If no data in params, fetch from the database
+    //       const fetchTripData = async () => {
+    //         const docRef = doc(db, 'trips', 'user-trip-id');  // Fetch data for the user
+    //         const docSnap = await getDoc(docRef);
+    //         if (docSnap.exists()) {
+    //           setTripData(docSnap.data());
+    //         } else {
+    //           console.log("No such document!");
+    //         }
+    //       };
+    //       fetchTripData();
+    //     }
+    //   }, [selectedImage]);
+    
+    const formatDate = (date) => {
+        return new Date(date).toLocaleDateString('en-US', {
+            month: 'short',  // 'short' will give the abbreviated month (e.g., Jan, Feb)
+            day: 'numeric',  // Day of the month (e.g., 1, 2, 3)
+            year: 'numeric', // Full year (e.g., 2024)
+        });
+    };
+    const tripDestination = destination || tripData?.destination
+    const imageUrl = selectedImage || tripData?.imageUrl; // Use param if available, otherwise fallback to database data
+    const tripStartDate = formatDate(startDate) || tripData?.startDate;
+    const tripEndDate = formatDate(endDate) || tripData?.endDate;
+    
     const animation = useRef(new Animated.Value(0)).current;
 
     const toggleMenu = () => {
@@ -33,9 +64,12 @@ export default function AboutScreen() {
     
     return (
         <>
-            <View style={styles.container}>
-                <Text>Travel Itinerary</Text>
-            </View>
+        <ImageBackground
+      source={{ uri: selectedImage }} // Set the selected image as the background
+      style={{ flex: 1, justifyContent: 'center', padding: 20 }}
+      imageStyle={{ opacity: 0.3 }} // Optional: Make the background slightly transparent
+    >
+
 
             <View style={styles.optionsContainer}>
                 {options.map((option, index) => (
@@ -69,6 +103,22 @@ export default function AboutScreen() {
                     <Text style={styles.toggleButtonText}>{expanded ? 'X' : '+'}</Text>
                 </TouchableOpacity>
             </View>
+            <Text style={{
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: 'white',
+        marginBottom: 10
+      }}>
+        Travel Itinerary
+      </Text>
+      <Text>
+        {`${tripStartDate} - ${tripEndDate}`}
+      </Text>
+      <Text>
+        {destination}
+      </Text>
+
+            </ImageBackground>
         </>
     );
 }
