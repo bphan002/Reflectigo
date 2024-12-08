@@ -92,9 +92,26 @@ export default function TravelItinerary() {
                         ]}
                     >
                         {/* Use Link for navigation */}
+                        {option === "Outfits" ? (
+                            <Link
+                                href={{
+                                    pathname:'/Outfits',
+                                    params: {
+                                        startDate,
+                                        endDate,
+                                        data: 'hi',
+                                    }
+                                }}
+                                style={styles.linkButton}
+                                >
+                                    <Text style={styles.optionText}>{option}</Text>
+                                </Link>
+                        ): (
                         <Link href={`/${option.replace(/\s+/g, '')}`} style={styles.linkButton}>
                             <Text style={styles.optionText}>{option}</Text>
                         </Link>
+                        )
+                    }
                     </Animated.View>
                 ))}
 
