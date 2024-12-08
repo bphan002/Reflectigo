@@ -1,34 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, Button, StyleSheet, Alert } from 'react-native';
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 
 const Profile = () => {
-  const [profilePicture, setProfilePicture] = useState(null); // Profile picture from Google or user upload
+  const [profilePicture, setProfilePicture] = useState(null);
 
-  const handleChoosePhoto = () => {
-    console.log('hi')
-    // launchImageLibrary({ mediaType: 'photo', maxWidth: 300, maxHeight: 300 }, (response) => {
-    //   if (response.didCancel) {
-    //     Alert.alert('Cancelled', 'No photo selected.');
-    //   } else if (response.errorMessage) {
-    //     Alert.alert('Error', response.errorMessage);
-    //   } else {
-    //     setProfilePicture(response.assets[0].uri);
-    //   }
-    // });
+  const handleChoosePhoto = async () => {
+    // Request permission to access media library
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert("Permission Denied", "You need to grant permission to access the media library.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setProfilePicture(result.assets[0].uri);
+    }
   };
 
-  const handleTakePhoto = () => {
-    console.log('handletakephoto')
-    // launchCamera({ mediaType: 'photo', maxWidth: 300, maxHeight: 300 }, (response) => {
-    //   if (response.didCancel) {
-    //     Alert.alert('Cancelled', 'No photo taken.');
-    //   } else if (response.errorMessage) {
-    //     Alert.alert('Error', response.errorMessage);
-    //   } else {
-    //     setProfilePicture(response.assets[0].uri);
-    //   }
-    // });
+  const handleTakePhoto = async () => {
+    // Request permission to access camera
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert("Permission Denied", "You need to grant permission to access the camera.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setProfilePicture(result.assets[0].uri);
+    }
   };
 
   return (
