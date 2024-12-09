@@ -12,12 +12,11 @@ import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker'; // Import expo-image-picker
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons'; // Import trashcan icon
-// import placeholder from '../assets/images/placeholder.png'
 
 export default function Outfits() {
   const { startDate, endDate } = useLocalSearchParams();
 
-  // Convert the startDate and endDate to Date objects
+  // Convert the startDate and endDate to Date objectsnpx
   const start = new Date(startDate);
   const end = new Date(endDate);
 
