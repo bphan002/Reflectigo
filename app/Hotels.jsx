@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Button, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { API_URL, GOOGLE_API_KEY } from '@env';
+import { GOOGLE_API_KEY } from '@env';
 
 
 export default function Hotel() {
