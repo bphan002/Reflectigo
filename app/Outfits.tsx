@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons'; // Import trashcan icon
 export default function Outfits() {
   const { startDate, endDate } = useLocalSearchParams();
 
-  // Convert the startDate and endDate to Date objectsnpx
+  // Convert the startDate and endDate to Date objects
   const start = new Date(startDate);
   const end = new Date(endDate);
 
