@@ -2,11 +2,16 @@ import { Text, View, TouchableOpacity, Animated, StyleSheet, ImageBackground } f
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Link } from 'expo-router';  // Import the Link component
 import { useState, useRef } from 'react';
+import { getFirestore, collection, addDoc } from 'firebase/firestore'
+import app from './firebaseConfig'
 
 export default function TravelItinerary() {
     const { destination, startDate, endDate, selectedImage } = useLocalSearchParams();
-    const [expanded, setExpanded] = useState(false);
-    const [tripData, setTripData] = useState(null) //this will be what we get from DB
+    const [ expanded, setExpanded ] = useState(false);
+    const [ tripData, setTripData ] = useState(null) //this will be what we get from DB
+   
+
+    const db = getFirestore(app)
 
     //will be used once we implement database
     // useEffect(() => {

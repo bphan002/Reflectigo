@@ -1,8 +1,7 @@
 import { Text, View, StyleSheet } from 'react-native';
 import Button from '@/components/Button';
 import { useRouter, Link } from 'expo-router';
-
-
+import app from './firebaseConfig'
 // <Link href={`/${option.replace(/\s+/g, '')}`} style={styles.linkButton}>
 // <Text style={styles.optionText}>{option}</Text>
 // </Link>

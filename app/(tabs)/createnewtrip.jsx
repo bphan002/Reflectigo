@@ -6,6 +6,9 @@ import Button from '@/components/Button';
 import { useRouter } from 'expo-router';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
 import { GOOGLE_API_KEY } from '@env';
+import app from '../firebaseConfig'
+import { getFirestore, addDoc, collection } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export default function CreateTrip() {
   const router = useRouter(); 
@@ -17,7 +20,10 @@ export default function CreateTrip() {
   const [placeImage, setPlaceImage] = useState(null)
   const [photos, setPhotos] = useState([]);  // Store photos array in state
 
+  const db = getFirestore(app)
+  const storage = getStorage(app);
 
+  
   const fetchPlaceDetails = async (placeId) => {
     try {
       const response = await fetch(
@@ -62,6 +68,38 @@ export default function CreateTrip() {
     setPlaceImage(imageUrl);  // Save the selected image URL in state
     Alert.alert("Image Selected", "You have successfully selected an image for your trip.");
   };
+
+  const saveTrip = async () => {
+    let finalImageUrl = placeImage;
+  
+    // If the selected image is from local storage, upload it to Firebase Storage
+    if (placeImage && !placeImage.startsWith('http')) {
+      const imageRef = ref(storage, `tripImages/${Date.now()}.jpg`);
+      const response = await fetch(placeImage);
+      const blob = await response.blob();
+      await uploadBytes(imageRef, blob);
+      finalImageUrl = await getDownloadURL(imageRef); // Get the download URL of the uploaded image
+    }
+  
+    try {
+      // Save the trip details to Firestore
+      await addDoc(collection(db, 'trips'), {
+        destination,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        imageUrl: finalImageUrl,
+      });
+  
+      Alert.alert('Trip Saved', 'Your trip has been successfully saved!');
+      // Navigate to the travel itinerary page after successful save
+      goToTravelItinerary();
+
+    } catch (error) {
+      console.error('Error saving trip:', error);
+      Alert.alert('Error', 'Failed to save the trip.');
+    }
+  };
+
   
   const handleConfirmStart = (e) => {
     const selectedDate = new Date(e.nativeEvent.timestamp);
@@ -194,7 +232,7 @@ export default function CreateTrip() {
         );
       })}
     </View>
-  <Button label="Start Planning" onPress={goToTravelItinerary} />
+  <Button label="Start Planning" onPress={saveTrip} />
   </View>
   </ScrollView>
   </>
