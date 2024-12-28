@@ -1,39 +1,35 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Alert, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Alert, Image, TouchableOpacity, ScrollView } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import * as ImagePicker from "expo-image-picker";
+import * as ImagePicker from 'expo-image-picker';
 import Button from '@/components/Button';
 import { useRouter } from 'expo-router';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { GOOGLE_API_KEY } from '@env';
-import app from '../firebaseConfig'
-import { getFirestore, addDoc, collection } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import app from '../firebaseConfig';
+import { getFirestore } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function CreateTrip() {
-  const router = useRouter(); 
+  const router = useRouter();
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
-  const [placeImage, setPlaceImage] = useState(null)
-  const [photos, setPhotos] = useState([]);  // Store photos array in state
+  const [photos, setPhotos] = useState([]); // Store photos from Google Places API
+  const [placeImage, setPlaceImage] = useState(null); // Single source of truth for image selection
 
-  const db = getFirestore(app)
-  const storage = getStorage(app);
+  const db = getFirestore(app);
 
-  
   const fetchPlaceDetails = async (placeId) => {
     try {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/place/details/json?placeid=${placeId}&fields=photos&key=${GOOGLE_API_KEY}`
       );
       const data = await response.json();
-  
+
       if (data.result && data.result.photos) {
-        setPhotos(data.result.photos);  // Set photos from the API response
-        console.log("Place photos:", data.result.photos);
+        setPhotos(data.result.photos);
+        console.log('Place photos:', data.result.photos);
       } else {
         alert('No photos available for this location.');
       }
@@ -46,195 +42,145 @@ export default function CreateTrip() {
   const pickImageAsync = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-        Alert.alert("Permission required", "Please allow access to select images.");
-        return;
+      Alert.alert('Permission required', 'Please allow access to select images.');
+      return;
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
-        allowsEditing: true,
-        quality: 1,
+      allowsEditing: true,
+      quality: 1,
     });
 
     if (!result.canceled) {
-        console.log('Selected Image URI:', result.assets[0].uri);
+      setPlaceImage(result.assets[0].uri); // Set the local image URI
+      console.log('Selected Image URI:', result.assets[0].uri);
     } else {
-        alert("You did not select any image.");
+      alert('You did not select any image.');
     }
   };
 
-  
-  const handleImageSelect = (imageUrl) => {
-    console.log('Selected image URL:', imageUrl);
-    setPlaceImage(imageUrl);  // Save the selected image URL in state
-    Alert.alert("Image Selected", "You have successfully selected an image for your trip.");
+  const handleGoogleImageSelect = (imageUrl) => {
+    setPlaceImage(imageUrl); // Set Google image URL
+    console.log('Google Image URL selected:', imageUrl);
   };
 
   const saveTrip = async () => {
-    let finalImageUrl = placeImage;
-  
-    // If the selected image is from local storage, upload it to Firebase Storage
-    if (placeImage && !placeImage.startsWith('http')) {
-      const imageRef = ref(storage, `tripImages/${Date.now()}.jpg`);
-      const response = await fetch(placeImage);
-      const blob = await response.blob();
-      await uploadBytes(imageRef, blob);
-      finalImageUrl = await getDownloadURL(imageRef); // Get the download URL of the uploaded image
-    }
-  
     try {
-      // Save the trip details to Firestore
-      await addDoc(collection(db, 'trips'), {
+      const tripKey = `trip_${Date.now()}`;
+
+      const tripData = {
         destination,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        imageUrl: finalImageUrl,
-      });
-  
-      Alert.alert('Trip Saved', 'Your trip has been successfully saved!');
-      // Navigate to the travel itinerary page after successful save
-      goToTravelItinerary();
+        imageUrl: placeImage, // Single source of truth for the image
+      };
 
+      // Save the trip details locally
+      await AsyncStorage.setItem(tripKey, JSON.stringify(tripData));
+      Alert.alert('Trip Saved', 'Your trip has been successfully saved locally!');
+
+      // Navigate to the travel itinerary page
+      goToTravelItinerary(tripData);
     } catch (error) {
       console.error('Error saving trip:', error);
-      Alert.alert('Error', 'Failed to save the trip.');
+      Alert.alert('Error', 'Failed to save the trip locally.');
     }
   };
 
-  
   const handleConfirmStart = (e) => {
     const selectedDate = new Date(e.nativeEvent.timestamp);
-    console.log("selectedDate", selectedDate)
     setStartDate(selectedDate);
   };
+
   const handleConfirmEnd = (e) => {
     const selectedDate = new Date(e.nativeEvent.timestamp);
-  // const handleConfirmEnd = (event: React.SyntheticEvent, selectedDate : Date) => {
-    // const currentDate = selectedDate || endDate;
     setEndDate(selectedDate);
   };
 
-  const goToTravelItinerary = () => {
-    //put information in params when ready, name, date of trip, name of trip
-    router.push({ 
-      pathname: '/travelitinerary', 
-        params: { 
-          destination: destination,
-          startDate: startDate,
-          endDate: endDate,
-          selectedImage: placeImage
-        } 
+  const goToTravelItinerary = (tripData) => {
+    router.push({
+      pathname: '/travelitinerary',
+      params: tripData,
     });
   };
 
   return (
-    <>
     <ScrollView>
+      <View style={{ padding: 20 }}>
+        <Text style={{ fontSize: 18 }}>Where to?</Text>
+        <GooglePlacesAutocomplete
+          placeholder="Enter destination"
+          onPress={(data, details = null) => {
+            setDestination(data.description);
+            const placeId = data.place_id;
+            console.log('Selected place ID:', placeId);
+            fetchPlaceDetails(placeId);
+          }}
+          query={{
+            key: GOOGLE_API_KEY,
+            language: 'en',
+            types: 'geocode',
+          }}
+          styles={{
+            container: {
+              flex: 0,
+              marginVertical: 10,
+            },
+            textInput: {
+              height: 40,
+              borderColor: 'gray',
+              borderWidth: 1,
+              paddingLeft: 10,
+              borderRadius: 5,
+            },
+            listView: {
+              backgroundColor: 'white',
+              borderRadius: 5,
+            },
+          }}
+        />
 
-
-    <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 18 }}>Where to?</Text>
-      <GooglePlacesAutocomplete
-  placeholder="Enter destination"
-  onPress={(data, details = null) => {
-    setDestination(data.description);  // Set the selected destination
-    const placeId = data.place_id;  // Get the place_id
-    console.log('Selected place ID:', placeId);
-
-    // Now, call the Place Details API to get more details (including photos)
-    fetchPlaceDetails(placeId);
-  }}
-        query={{
-          key: `${GOOGLE_API_KEY}`, 
-          language: 'en',
-          types: 'geocode', 
-        }}
-        styles={{
-          container: {
-            flex: 0,
-            marginVertical: 10,
-          },
-          textInput: {
-            height: 40,
-            borderColor: 'gray',
-            borderWidth: 1,
-            paddingLeft: 10,
-            borderRadius: 5,
-          },
-          listView: {
-            backgroundColor: 'white',
-            borderRadius: 5,
-          }
-        }}
-      />
-
-      {/* Display the selected place image this might be used later.  not sure yet
-      {placeImage && (
-        <View style={{ marginVertical: 20 }}>
-          <Text>Image of {destination}</Text>
-          <Image
-            source={{ uri: placeImage }}
-            style={{ width: 300, height: 200, borderRadius: 10 }}
+        <View>
+          <Text>Start of Trip</Text>
+          <DateTimePicker
+            value={startDate}
+            mode="date"
+            display="default"
+            onChange={handleConfirmStart}
           />
         </View>
-      )} */}
 
-      {/* Start Date Picker */}
-      {/* <Button
-        title={`Start Date: ${startDate.toLocaleDateString()}`}
-        onPress={() => setShowStartPicker(true)}
-      /> */}
-      <View>
-        <Text>Start of Trip</Text>
-        <DateTimePicker
-          required
-          value={startDate}
-          mode="date"
-          display="default"
-          onChange={handleConfirmStart}
-        />
-
-      </View>
-
-      {/* End Date Picker */}
-      {/* <Button
-        title={`End Date: ${endDate.toLocaleDateString()}`}
-        onPress={() => setShowEndPicker(true)}
-      /> */}
         <View>
           <Text>End of Trip</Text>
-        <DateTimePicker
-          required
-          value={endDate}
-          mode="date"
-          display="default"
-          onChange={handleConfirmEnd}
-        />
+          <DateTimePicker
+            value={endDate}
+            mode="date"
+            display="default"
+            onChange={handleConfirmEnd}
+          />
         </View>
 
-      <Text>(Optional)</Text>
-      <Button
-        onPress={pickImageAsync}
-        label="Choose your own picture for your trip"
-      />
-    </View>
-    <View style={{ padding: 10 }}>
-    <Text>Choose an image for your trip:</Text>
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-      {photos.map((photo, index) => {
-        const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photoreference=${photo.photo_reference}&key=${GOOGLE_API_KEY}`;
-        return (
-          <TouchableOpacity key={index} onPress={() => handleImageSelect(photoUrl)}>
-            <Image
-              source={{ uri: photoUrl }}
-              style={{ width: 100, height: 100, margin: 5 }}
-            />
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  <Button label="Start Planning" onPress={saveTrip} />
-  </View>
-  </ScrollView>
-  </>
+        <Button label="Choose your own picture for your trip" onPress={pickImageAsync} />
+      </View>
+
+      <View style={{ padding: 10 }}>
+        <Text>Choose an image for your trip:</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+          {photos.map((photo, index) => {
+            const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photoreference=${photo.photo_reference}&key=${GOOGLE_API_KEY}`;
+            return (
+              <TouchableOpacity key={index} onPress={() => handleGoogleImageSelect(photoUrl)}>
+                <Image
+                  source={{ uri: photoUrl }}
+                  style={{ width: 100, height: 100, margin: 5 }}
+                />
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <Button label="Start Planning" onPress={saveTrip} />
+      </View>
+    </ScrollView>
   );
 }
