@@ -56,6 +56,7 @@ const ShareTrip = ({ tripData }) => {
       const docRef = await addDoc(sharedTripRef, { 
         recipient,
         tripData: selectedTrip.data,
+        isShared: true,
         sharedAt: new Date().toISOString(),    
     });
     

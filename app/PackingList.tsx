@@ -10,6 +10,7 @@ const PackingList = () => {
     { id: '3', title: 'Electronics', items: [], newItem: '' },
     { id: '4', title: 'Documents', items: [], newItem: '' },
   ]);
+  
 
   
 
