@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 import { Checkbox } from 'expo-checkbox';
 
@@ -9,6 +9,8 @@ const PackingList = () => {
     { id: '3', title: 'Electronics', items: [], newItem: '' },
     { id: '4', title: 'Documents', items: [], newItem: '' },
   ]);
+
+  
 
   const [newCategory, setNewCategory] = useState(''); // State for the new category input
   const [editingItemId, setEditingItemId] = useState(null); // State for tracking the item being edited
