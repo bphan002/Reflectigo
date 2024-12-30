@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 import { Checkbox } from 'expo-checkbox';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PackingList = () => {
   const [packingItems, setPackingItems] = useState([
@@ -15,6 +16,34 @@ const PackingList = () => {
   const [newCategory, setNewCategory] = useState(''); // State for the new category input
   const [editingItemId, setEditingItemId] = useState(null); // State for tracking the item being edited
   const [editedItemText, setEditedItemText] = useState(''); // State for the edited text
+
+  useEffect(() => {
+    const loadPackingItems = async () => {
+      try {
+        const savedItems = await AsyncStorage.getItem('packingItems');
+        if (savedItems) {
+          setPackingItems(JSON.parse(savedItems));
+        }
+      } catch (error) {
+        console.error('Failed to load packing items:', error);
+      }
+    };
+
+    loadPackingItems();
+  }, []);
+
+  // Save state to AsyncStorage whenever it changes
+  useEffect(() => {
+    const savePackingItems = async () => {
+      try {
+        await AsyncStorage.setItem('packingItems', JSON.stringify(packingItems));
+      } catch (error) {
+        console.error('Failed to save packing items:', error);
+      }
+    };
+
+    savePackingItems();
+  }, [packingItems]);
 
   // Add new title section with an empty checklist
   const addNewTitle = (newTitle) => {
