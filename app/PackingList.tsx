@@ -2,14 +2,21 @@ import { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 import { Checkbox } from 'expo-checkbox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocalSearchParams } from 'expo-router';
 
 const PackingList = () => {
+  const { key, data } = useLocalSearchParams();
   const [packingItems, setPackingItems] = useState([
     { id: '1', title: 'Toiletries', items: [], newItem: '' },
     { id: '2', title: 'Clothing', items: [], newItem: '' },
     { id: '3', title: 'Electronics', items: [], newItem: '' },
     { id: '4', title: 'Documents', items: [], newItem: '' },
   ]);
+
+  console.log('Received key:', key);
+  console.log('Start Date:', startDate);
+  console.log('End Date:', endDate);
+  console.log('Data:', data);
   
 
   

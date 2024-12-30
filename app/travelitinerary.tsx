@@ -4,12 +4,13 @@ import { Link } from 'expo-router';  // Import the Link component
 import { useState, useRef } from 'react';
 
 export default function TravelItinerary() {
-    const { destination, startDate, endDate, selectedImage, title } = useLocalSearchParams();
+    const { key, destination, startDate, endDate, selectedImage, title } = useLocalSearchParams();
     const { data } = useLocalSearchParams();
     const tripData = JSON.parse(data)
     console.log('tripData', tripData)
     const [ expanded, setExpanded ] = useState(false);//this will be what we get from DB
    
+    console.log('what is key', key)
     //will be used once we implement database
     // useEffect(() => {
     //     if (!selectedImage) {
@@ -101,7 +102,8 @@ export default function TravelItinerary() {
                                     params: {
                                         startDate,
                                         endDate,
-                                        data: 'hi',
+                                        data,
+                                        key,
                                     }
                                 }}
                                 style={styles.linkButton}
@@ -109,9 +111,20 @@ export default function TravelItinerary() {
                                     <Text style={styles.optionText}>{option}</Text>
                                 </Link>
                         ): (
-                        <Link href={`/${option.replace(/\s+/g, '')}`} style={styles.linkButton}>
-                            <Text style={styles.optionText}>{option}</Text>
-                        </Link>
+                            <Link 
+                                href={{
+                                    pathname:`/${option.replace(/\s+/g, '')}`,
+                                    params: {
+                                        startDate,
+                                        endDate,
+                                        data,
+                                        key,
+                                    }
+                            }}
+                                style={styles.linkButton}
+                                >
+                                    <Text style={styles.optionText}>{option}</Text>
+                                </Link>
                         )
                     }
                     </Animated.View>
