@@ -14,6 +14,7 @@ export default function AboutScreen() {
       <Button label="Outfits" />
       <Button label="Packing List" />
       <Button label="Trip Highlights" />
+      <Button label="Share Trip" />
     </View>
   );
 }
