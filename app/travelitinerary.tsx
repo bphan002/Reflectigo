@@ -2,17 +2,14 @@ import { Text, View, TouchableOpacity, Animated, StyleSheet, ImageBackground } f
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Link } from 'expo-router';  // Import the Link component
 import { useState, useRef } from 'react';
-import { getFirestore, collection, addDoc } from 'firebase/firestore'
-import app from './firebaseConfig'
 
 export default function TravelItinerary() {
-    const { destination, startDate, endDate, selectedImage } = useLocalSearchParams();
-    const [ expanded, setExpanded ] = useState(false);
-    const [ tripData, setTripData ] = useState(null) //this will be what we get from DB
+    const { destination, startDate, endDate, selectedImage, title } = useLocalSearchParams();
+    const { data } = useLocalSearchParams();
+    const tripData = JSON.parse(data)
+    console.log('tripData', tripData)
+    const [ expanded, setExpanded ] = useState(false);//this will be what we get from DB
    
-
-    const db = getFirestore(app)
-
     //will be used once we implement database
     // useEffect(() => {
     //     if (!selectedImage) {
@@ -37,11 +34,11 @@ export default function TravelItinerary() {
             year: 'numeric', // Full year (e.g., 2024)
         });
     };
+    const tripTitle = tripData?.title || title
     const tripDestination = destination || tripData?.destination
     const imageUrl = selectedImage || tripData?.imageUrl; // Use param if available, otherwise fallback to database data
-    const tripStartDate = formatDate(startDate) || tripData?.startDate;
-    const tripEndDate = formatDate(endDate) || tripData?.endDate;
-    
+    const tripStartDate = formatDate(tripData?.startDate) || formatDate(startDate)
+    const tripEndDate =  formatDate(tripData?.endDate) ||formatDate(endDate)
     const animation = useRef(new Animated.Value(0)).current;
 
     const toggleMenu = () => {
@@ -75,7 +72,7 @@ export default function TravelItinerary() {
       imageStyle={{ opacity: 0.3 }} // Optional: Make the background slightly transparent
     >
 
-
+            <Text>{tripTitle}</Text>
             <View style={styles.optionsContainer}>
                 {options.map((option, index) => (
                     <Animated.View

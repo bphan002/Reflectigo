@@ -1,15 +1,17 @@
-import { Text, View, StyleSheet, ScrollView, Image } from 'react-native';
-import { useState, useEffect } from 'react'
+import { Text, View, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { useState, useEffect } from 'react';
 import Button from '@/components/Button';
-import { useRouter, Link } from 'expo-router'; 
+import { useRouter } from 'expo-router';
 import 'react-native-get-random-values';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
 export default function Index() {
-  const [ user, setUser] = useState('Billy')
+  const [user, setUser] = useState('Billy');
   const [trips, setTrips] = useState([]);
-  const router = useRouter(); // Use useRouter for navigation
-  //will need useEffect probably to get username
+  const router = useRouter();
+
+  // Function to retrieve all trips from AsyncStorage
   const getAllTrips = async () => {
     try {
       const allKeys = await AsyncStorage.getAllKeys();
@@ -27,6 +29,21 @@ export default function Index() {
     }
   };
 
+  // Function to delete a trip from AsyncStorage
+  const deleteTrip = async (tripKey) => {
+    try {
+      // Remove the trip from AsyncStorage
+      await AsyncStorage.removeItem(tripKey);
+      
+      // Update the state to remove the deleted trip from the list
+      setTrips((prevTrips) => prevTrips.filter((trip) => trip.key !== tripKey));
+
+      console.log(`Trip ${tripKey} deleted successfully.`);
+    } catch (error) {
+      console.error('Error deleting trip:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchTrips = async () => {
       const retrievedTrips = await getAllTrips();
@@ -37,26 +54,36 @@ export default function Index() {
 
   return (
     <>
-    <View style={styles.container}>
-      <Text style={styles.text}>Hi {user},</Text>
-      <Text style={styles.text}>Let's Travel!</Text>
-      <Button label="Create new trip" onPress={() => router.push('/createnewtrip')} />
-      <Text>Sample Trip Plan</Text>
-    </View>
-    <ScrollView>
-    {trips.map((trip) => (
-      <View key={trip.key} style={{ marginBottom: 10 }}>
-        <Text>Destination: {trip.data.destination}</Text>
-        <Text>Start Date: {trip.data.startDate}</Text>
-        <Text>End Date: {trip.data.endDate}</Text>
-        <Image
-            source={{ uri: trip.data.imageUrl }}
-            style={styles.tripImage}
-            resizeMode="cover"
-          />
+      <View style={styles.container}>
+        <Text style={styles.text}>Hi {user},</Text>
+        <Text style={styles.text}>Let's Travel!</Text>
+        <Button label="Create new trip" onPress={() => router.push('/createnewtrip')} />
+        <Text>Sample Trip Plan</Text>
       </View>
-    ))}
-  </ScrollView>
+      <ScrollView>
+        {trips.map((trip) => (
+          <TouchableOpacity
+            key={trip.key}
+            onPress={() => router.push({ pathname: '/travelitinerary', params: { key: trip.key, data: JSON.stringify(trip.data) } })}
+          >
+            <View style={{ marginBottom: 10 }}>
+              <Text>{trip.data.title}</Text>
+              <Text>Destination: {trip.data.destination}</Text>
+              <Text>Start Date: {trip.data.startDate}</Text>
+              <Text>End Date: {trip.data.endDate}</Text>
+              <Image
+                source={{ uri: trip.data.imageUrl }}
+                style={styles.tripImage}
+                resizeMode="cover"
+              />
+              {/* Delete button for each trip */}
+              <TouchableOpacity onPress={() => deleteTrip(trip.key)} style={styles.deleteButton}>
+                <Text style={styles.deleteText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </>
   );
 }
@@ -71,21 +98,10 @@ const styles = StyleSheet.create({
   text: {
     color: '#fff',
   },
-  /* @tutinfo Add the style of <CODE>fontSize</CODE>, <CODE>textDecorationLine</CODE>, and <CODE>color</CODE> to <CODE>Link</CODE> component. */
   button: {
     fontSize: 20,
     textDecorationLine: 'underline',
     color: '#fff',
-  },
-  tripContainer: {
-    flexDirection: 'row',
-    marginBottom: 15,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    alignItems: 'center',
   },
   tripImage: {
     width: 80,
@@ -93,12 +109,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginRight: 10,
   },
-  tripDetails: {
-    flex: 1,
+  deleteButton: {
+    backgroundColor: 'red',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
   },
-  destination: {
-    fontSize: 16,
+  deleteText: {
+    color: '#fff',
     fontWeight: 'bold',
-    marginBottom: 5,
+    textAlign: 'center',
   },
 });

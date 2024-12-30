@@ -1,24 +1,24 @@
 import { useState } from 'react';
-import { View, Text, Alert, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Alert, Image, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import Button from '@/components/Button';
 import { useRouter } from 'expo-router';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { GOOGLE_API_KEY } from '@env';
-import app from '../firebaseConfig';
+import db from '../firebaseConfig';
 import { getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { v4 as uuidv4 } from 'uuid';
 
 export default function CreateTrip() {
   const router = useRouter();
+  const [title, setTitle] = useState('')
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [photos, setPhotos] = useState([]); // Store photos from Google Places API
   const [placeImage, setPlaceImage] = useState(null); // Single source of truth for image selection
-
-  const db = getFirestore(app);
 
   const fetchPlaceDetails = async (placeId) => {
     try {
@@ -66,9 +66,10 @@ export default function CreateTrip() {
 
   const saveTrip = async () => {
     try {
-      const tripKey = `trip_${Date.now()}`;
+      const tripKey = `trip_${uuidv4()}`
 
       const tripData = {
+        title,
         destination,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
@@ -106,6 +107,22 @@ export default function CreateTrip() {
 
   return (
     <ScrollView>
+      <View style = {{ padding: 20}}>
+        <Text style = {{ fontSize:18 }}> Trip Title</Text>
+        <TextInput
+          placeholder="Enter trip title"
+          value={title}
+          onChangeText={setTitle}
+          style={{
+            height: 40,
+            borderColor: 'gray',
+            borderWidth:1,
+            paddingLeft: 10,
+            borderRadius:5,
+            marginBottom:10,
+          }}
+        />
+      </View>
       <View style={{ padding: 20 }}>
         <Text style={{ fontSize: 18 }}>Where to?</Text>
         <GooglePlacesAutocomplete
