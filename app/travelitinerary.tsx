@@ -1,56 +1,63 @@
+import { useEffect, useState, useRef } from 'react';
 import { Text, View, TouchableOpacity, Animated, StyleSheet, ImageBackground } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Link } from 'expo-router';  // Import the Link component
-import { useState, useRef } from 'react';
+import { useLocalSearchParams, Link } from 'expo-router';
 
 export default function TravelItinerary() {
-    const { key, destination, startDate, endDate, selectedImage, title } = useLocalSearchParams();
-    const { data } = useLocalSearchParams();
-    const tripData = JSON.parse(data)
-    console.log('tripData', tripData)
-    const [ expanded, setExpanded ] = useState(false);//this will be what we get from DB
-   
-    console.log('what is key', key)
-    //will be used once we implement database
-    // useEffect(() => {
-    //     if (!selectedImage) {
-    //       // If no data in params, fetch from the database
-    //       const fetchTripData = async () => {
-    //         const docRef = doc(db, 'trips', 'user-trip-id');  // Fetch data for the user
-    //         const docSnap = await getDoc(docRef);
-    //         if (docSnap.exists()) {
-    //           setTripData(docSnap.data());
-    //         } else {
-    //           console.log("No such document!");
-    //         }
-    //       };
-    //       fetchTripData();
-    //     }
-    //   }, [selectedImage]);
-    
-    const formatDate = (date) => {
-        return new Date(date).toLocaleDateString('en-US', {
-            month: 'short',  // 'short' will give the abbreviated month (e.g., Jan, Feb)
-            day: 'numeric',  // Day of the month (e.g., 1, 2, 3)
-            year: 'numeric', // Full year (e.g., 2024)
-        });
-    };
-    const tripTitle = tripData?.title || title
-    const tripDestination = destination || tripData?.destination
-    const imageUrl = selectedImage || tripData?.imageUrl; // Use param if available, otherwise fallback to database data
-    const tripStartDate = formatDate(tripData?.startDate) || formatDate(startDate)
-    const tripEndDate =  formatDate(tripData?.endDate) ||formatDate(endDate)
+    const { key, destination, startDate, endDate, selectedImage, title, data } = useLocalSearchParams();
+    const [tripData, setTripData] = useState(null); // State to hold trip data
+    const [isRefreshing, setIsRefreshing] = useState(false); // State to trigger refresh
     const animation = useRef(new Animated.Value(0)).current;
 
     const toggleMenu = () => {
-        // Toggle the expanded state
-        setExpanded(!expanded);
         Animated.timing(animation, {
-          toValue: expanded ? 0 : 1,
-          duration: 300,
-          useNativeDriver: true,
+            toValue: tripData ? 1 : 0,
+            duration: 300,
+            useNativeDriver: true,
         }).start();
-      };
+    };
+
+    // Load trip data
+    useEffect(() => {
+        if (data) {
+            try {
+                const parsedData = JSON.parse(data);
+                setTripData(parsedData);
+            } catch (error) {
+                console.error('Failed to parse trip data:', error);
+            }
+        }
+    }, [data]);
+
+    // Refresh UI after data loads
+    useEffect(() => {
+        if (tripData) {
+            setIsRefreshing(true);
+            setTimeout(() => setIsRefreshing(false), 500); // Simulate a refresh delay
+        }
+    }, [tripData]);
+
+    const formatDate = (date) => {
+        return new Date(date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        });
+    };
+
+    const tripTitle = tripData?.title || title;
+    const tripDestination = tripData?.destination || destination;
+    const imageUrl = tripData?.imageUrl || selectedImage;
+    const tripStartDate = formatDate(tripData?.startDate || startDate);
+    const tripEndDate = formatDate(tripData?.endDate || endDate);
+
+    // Show a loading screen until trip data is available or while refreshing
+    if (!tripData || isRefreshing) {
+        return (
+            <View style={styles.centered}>
+                <Text>{isRefreshing ? 'Refreshing trip details...' : 'Loading trip details...'}</Text>
+            </View>
+        );
+    }
 
     const options = [
         'Trip Highlights',
@@ -64,15 +71,13 @@ export default function TravelItinerary() {
         'Flights',
         'Trip Overview',
     ];
-    
-    return (
-        <>
-        <ImageBackground
-      source={{ uri: selectedImage }} // Set the selected image as the background
-      style={{ flex: 1, justifyContent: 'center', padding: 20 }}
-      imageStyle={{ opacity: 0.3 }} // Optional: Make the background slightly transparent
-    >
 
+    return (
+        <ImageBackground
+            source={{ uri: imageUrl }}
+            style={{ flex: 1, justifyContent: 'center', padding: 20 }}
+            imageStyle={{ opacity: 0.3 }}
+        >
             <Text>{tripTitle}</Text>
             <View style={styles.optionsContainer}>
                 {options.map((option, index) => (
@@ -94,99 +99,53 @@ export default function TravelItinerary() {
                             },
                         ]}
                     >
-                        {/* Use Link for navigation */}
-                        {option === "Outfits" ? (
-                            <Link
-                                href={{
-                                    pathname:'/Outfits',
-                                    params: {
-                                        startDate,
-                                        endDate,
-                                        data,
-                                        key,
-                                    }
-                                }}
-                                style={styles.linkButton}
-                                >
-                                    <Text style={styles.optionText}>{option}</Text>
-                                </Link>
-                        ): (
-                            <Link 
-                                href={{
-                                    pathname:`/${option.replace(/\s+/g, '')}`,
-                                    params: {
-                                        startDate,
-                                        endDate,
-                                        data,
-                                        key,
-                                    }
+                        <Link
+                            href={{
+                                pathname: `/${option.replace(/\s+/g, '')}`,
+                                params: { startDate, endDate, data, key },
                             }}
-                                style={styles.linkButton}
-                                >
-                                    <Text style={styles.optionText}>{option}</Text>
-                                </Link>
-                        )
-                    }
+                            style={styles.linkButton}
+                        >
+                            <Text style={styles.optionText}>{option}</Text>
+                        </Link>
                     </Animated.View>
                 ))}
-
-                {/* Main toggle button */}
                 <TouchableOpacity style={styles.toggleButton} onPress={toggleMenu}>
-                    <Text style={styles.toggleButtonText}>{expanded ? 'X' : '+'}</Text>
+                    <Text style={styles.toggleButtonText}>{tripData ? 'X' : '+'}</Text>
                 </TouchableOpacity>
             </View>
-            <Text style={{
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: 'white',
-        marginBottom: 10
-      }}>
-        Travel Itinerary
-      </Text>
-      <Text>
-        {`${tripStartDate} - ${tripEndDate}`}
-      </Text>
-      <Text>
-        {destination}
-      </Text>
-
-            </ImageBackground>
-        </>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'white', marginBottom: 10 }}>
+                Travel Itinerary
+            </Text>
+            <Text>{`${tripStartDate} - ${tripEndDate}`}</Text>
+            <Text>{tripDestination}</Text>
+        </ImageBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        alignItems: 'center',
+    centered: {
+        flex: 1,
         justifyContent: 'center',
-        position: 'absolute',
-        bottom: 30,
-        right: 30,
+        alignItems: 'center',
     },
     optionsContainer: {
         position: 'absolute',
         bottom: 0,
         right: 0,
-        width: 250, // Limiting the width to test wrapping
+        width: 250,
     },
     option: {
         position: 'absolute',
         bottom: 0,
         right: 0,
     },
-    button: {
-        backgroundColor: '#007bff',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-        marginBottom: 10,
-    },
     optionText: {
         textAlign: 'center',
         color: '#fff',
         fontSize: 16,
-        flexWrap: 'wrap', // Ensures text wraps inside the container
-        width: '100%', // Make sure the text wraps when necessary
+        flexWrap: 'wrap',
+        width: '100%',
     },
     toggleButton: {
         backgroundColor: '#007bff',
@@ -196,10 +155,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         elevation: 5,
-        position: 'absolute', // Make it position absolute within the parent
-        bottom: 0, // Align to bottom
-        right: 0, // Align to right
-        margin: 10, // Optional: add margin to give space from the edges
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        margin: 10,
     },
     toggleButtonText: {
         color: '#fff',
@@ -212,5 +171,5 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         borderRadius: 8,
         marginBottom: 10,
-    }
+    },
 });

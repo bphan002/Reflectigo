@@ -13,10 +13,11 @@ const PackingList = () => {
     { id: '4', title: 'Documents', items: [], newItem: '' },
   ]);
 
-  console.log('Received key:', key);
-  console.log('Start Date:', startDate);
-  console.log('End Date:', endDate);
-  console.log('Data:', data);
+  // console.log('Received key:', key);
+  // console.log('Start Date:', startDate);
+  // console.log('End Date:', endDate);
+  // console.log('Data:', data);
+  // console.log('what is packingItems?', packingItems)
   
 
   
@@ -29,7 +30,8 @@ const PackingList = () => {
     const loadPackingItems = async () => {
       try {
         const savedItems = await AsyncStorage.getItem(key);
-        console.log("what is savedItems?", savedItems)
+        console.log("what is savedItems", savedItems)
+        console.log("what is packing items?", savedItems.packingItems)
         if (savedItems) {
           setPackingItems(JSON.parse(savedItems));
         }
@@ -50,6 +52,8 @@ const PackingList = () => {
         if (existingTripData) {
           const tripData = JSON.parse(existingTripData)
           tripData.packingItems = packingItems
+          // console.log('what is tripData', tripData)
+          // console.log('what is packingItems?', packingItems)
           await AsyncStorage.setItem(key, JSON.stringify(tripData));
         }
 
