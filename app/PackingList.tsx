@@ -28,7 +28,8 @@ const PackingList = () => {
   useEffect(() => {
     const loadPackingItems = async () => {
       try {
-        const savedItems = await AsyncStorage.getItem('packingItems');
+        const savedItems = await AsyncStorage.getItem(key);
+        console.log("what is savedItems?", savedItems)
         if (savedItems) {
           setPackingItems(JSON.parse(savedItems));
         }
@@ -44,7 +45,14 @@ const PackingList = () => {
   useEffect(() => {
     const savePackingItems = async () => {
       try {
-        await AsyncStorage.setItem('packingItems', JSON.stringify(packingItems));
+        const existingTripData = await AsyncStorage.getItem(key);
+        
+        if (existingTripData) {
+          const tripData = JSON.parse(existingTripData)
+          tripData.packingItems = packingItems
+          await AsyncStorage.setItem(key, JSON.stringify(tripData));
+        }
+
       } catch (error) {
         console.error('Failed to save packing items:', error);
       }
