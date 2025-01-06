@@ -6,11 +6,15 @@ export default function TravelItinerary() {
     const { key, destination, startDate, endDate, selectedImage, title, data } = useLocalSearchParams();
     const [tripData, setTripData] = useState(null); // State to hold trip data
     const [isRefreshing, setIsRefreshing] = useState(false); // State to trigger refresh
+    const [isMenuExpanded, setIsMenuExpanded] = useState(false); // Track whether the menu is expanded
     const animation = useRef(new Animated.Value(0)).current;
+    console.log('tripData in travel itenary', JSON.stringify(tripData,null,2));
 
     const toggleMenu = () => {
+        setIsMenuExpanded(prevState => !prevState); // Toggle the expanded state
+
         Animated.timing(animation, {
-            toValue: tripData ? 1 : 0,
+            toValue: isMenuExpanded ? 0 : 1, // Animate based on whether the menu is expanded
             duration: 300,
             useNativeDriver: true,
         }).start();
@@ -111,7 +115,7 @@ export default function TravelItinerary() {
                     </Animated.View>
                 ))}
                 <TouchableOpacity style={styles.toggleButton} onPress={toggleMenu}>
-                    <Text style={styles.toggleButtonText}>{tripData ? 'X' : '+'}</Text>
+                    <Text style={styles.toggleButtonText}>{isMenuExpanded ? 'X' : '+'}</Text>
                 </TouchableOpacity>
             </View>
             <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'white', marginBottom: 10 }}>

@@ -13,27 +13,21 @@ const PackingList = () => {
     { id: '4', title: 'Documents', items: [], newItem: '' },
   ]);
 
-  // console.log('Received key:', key);
-  // console.log('Start Date:', startDate);
-  // console.log('End Date:', endDate);
-  // console.log('Data:', data);
-  // console.log('what is packingItems?', packingItems)
-  
-
-  
-
   const [newCategory, setNewCategory] = useState(''); // State for the new category input
   const [editingItemId, setEditingItemId] = useState(null); // State for tracking the item being edited
   const [editedItemText, setEditedItemText] = useState(''); // State for the edited text
 
+  // Load packing items from AsyncStorage
   useEffect(() => {
     const loadPackingItems = async () => {
       try {
         const savedItems = await AsyncStorage.getItem(key);
-        console.log("what is savedItems", savedItems)
-        console.log("what is packing items?", savedItems.packingItems)
-        if (savedItems) {
-          setPackingItems(JSON.parse(savedItems));
+          const parsedSavedItems = JSON.parse(savedItems);
+          if (parsedSavedItems.packingItems) {
+
+            // Create a deep copy of packingItems to avoid reference issues
+            const deepCopyPackingItems = JSON.parse(JSON.stringify(parsedSavedItems)).packingItems;   
+          setPackingItems(deepCopyPackingItems);
         }
       } catch (error) {
         console.error('Failed to load packing items:', error);
@@ -41,31 +35,37 @@ const PackingList = () => {
     };
 
     loadPackingItems();
-  }, []);
+  }, [key]);
 
-  // Save state to AsyncStorage whenever it changes
+  // Save packing items to AsyncStorage whenever they change
   useEffect(() => {
+    console.log('this should trigger when packing items change')
+
     const savePackingItems = async () => {
       try {
+        // Step 1: Retrieve existing data from AsyncStorage
         const existingTripData = await AsyncStorage.getItem(key);
-        
+        console.log('existingtripdata', JSON.stringify(existingTripData,null,2))
+        // Step 2: Check if data exists and parse it
         if (existingTripData) {
-          const tripData = JSON.parse(existingTripData)
-          tripData.packingItems = packingItems
-          // console.log('what is tripData', tripData)
-          // console.log('what is packingItems?', packingItems)
+          const tripData = JSON.parse(existingTripData);
+          console.log("what is the tripdata after parase", tripData)
+          // Step 3: Overwrite the packingItems property with the new packingItems
+          console.log('Packing Items:', JSON.stringify(packingItems, null, 2));
+          tripData.packingItems = packingItems;
+          console.log('what is new tripdata with the packingitems', JSON.stringify(tripData,null,2))
+          // Step 4: Save the updated object back to AsyncStorage
           await AsyncStorage.setItem(key, JSON.stringify(tripData));
-        }
-
+          console.log('Packing items overwritten successfully!');
+        } 
       } catch (error) {
         console.error('Failed to save packing items:', error);
       }
     };
+    savePackingItems()
+  }, [packingItems, key]);
 
-    savePackingItems();
-  }, [packingItems]);
-
-  // Add new title section with an empty checklist
+  // Add a new category
   const addNewTitle = (newTitle) => {
     if (newTitle.trim() !== '') {
       setPackingItems([
@@ -76,7 +76,7 @@ const PackingList = () => {
     }
   };
 
-  // Add new checklist item to the selected category
+  // Add a new item to a category
   const addNewItem = (categoryId) => {
     const newItemValue = packingItems.find(item => item.id === categoryId).newItem;
     if (newItemValue.trim() !== '') {
@@ -94,7 +94,7 @@ const PackingList = () => {
     }
   };
 
-  // Toggle checklist item
+  // Toggle a checklist item
   const toggleItem = (categoryId, itemId) => {
     setPackingItems((prevItems) =>
       prevItems.map((category) =>
@@ -126,7 +126,7 @@ const PackingList = () => {
     setPackingItems((prevItems) => prevItems.filter(category => category.id !== categoryId));
   };
 
-  // Edit category title
+  // Edit a category title
   const editCategoryTitle = (categoryId, newTitle) => {
     setPackingItems((prevItems) =>
       prevItems.map((category) =>
