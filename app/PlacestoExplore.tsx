@@ -28,9 +28,11 @@ export default function PlacesToExplore() {
       setPlaces((prevPlaces) => [...prevPlaces, newPlace]);
     }
 
-    // Clear the inputs after adding/updating
-    setPlace('');
-    setNote('');
+    // Clear the note and place inputs after adding/updating
+    setPlace('');  // Reset the place input field
+    setNote('');   // Reset the note input field
+    console.log('place', place)
+    console.log('note', note)
   };
 
   // Function to handle editing a place
@@ -72,6 +74,7 @@ export default function PlacesToExplore() {
       <GooglePlacesAutocomplete
         placeholder="Enter place"
         value={place}
+        onChangeText={(text) => setPlace(text)}  // Use onChangeText to update the place as user types
         onPress={(data) => {
           setPlace(data.description); // Set the place when a user selects from the list
         }}
