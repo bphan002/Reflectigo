@@ -8,22 +8,74 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker'; // Import expo-image-picker
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons'; // Import trashcan icon
 import app from './firebaseConfig'
 
 export default function Outfits() {
-  const { startDate, endDate } = useLocalSearchParams();
-  console.log("app", app)
-  // Convert the startDate and endDate to Date objects
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const [outfits, setoutfits] = useState([
+    { id: '1', title: 'Toiletries', items: [], newItem: '' },
+    { id: '2', title: 'Clothing', items: [], newItem: '' },
+    { id: '3', title: 'Electronics', items: [], newItem: '' },
+    { id: '4', title: 'Documents', items: [], newItem: '' },
+  ]);
+  // console.log("uselocalsearchparams", useLocalSearchParams())
+  const { data } = useLocalSearchParams();
 
+
+    // Load packing items from AsyncStorage
+    useEffect(() => {
+      const loadOutfits = async () => {
+        try {
+          const savedItems = await AsyncStorage.getItem(key);
+            const parsedSavedItems = JSON.parse(savedItems);
+            if (parsedSavedItems.outfits) {
+  
+              // Create a deep copy of Outfits to avoid reference issues
+              const deepCopyOutfits = JSON.parse(JSON.stringify(parsedSavedItems)).outfits;   
+            setOutfits(deepCopyOutfits);
+          }
+        } catch (error) {
+          console.error('Failed to load packing items:', error);
+        }
+      };
+  
+      loadOutfits();
+    }, [key]);
+  
+    // Save packing items to AsyncStorage whenever they change
+    useEffect(() => {
+      console.log('this should trigger when outfits items change')
+  
+      const saveOutfits = async () => {
+        try {
+          // Step 1: Retrieve existing data from AsyncStorage
+          const existingTripData = await AsyncStorage.getItem(key);
+          console.log('existingtripdata', JSON.stringify(existingTripData,null,2))
+          // Step 2: Check if data exists and parse it
+          if (existingTripData) {
+            const tripData = JSON.parse(existingTripData);
+            console.log("what is the tripdata after parase", tripData)
+            // Step 3: Overwrite the Outfits property with the new Outfits
+            console.log('Packing Items:', JSON.stringify(outfits, null, 2));
+            tripData.outfits = outfits;
+            console.log('what is new tripdata with the outfit', JSON.stringify(tripData,null,2))
+            // Step 4: Save the updated object back to AsyncStorage
+            await AsyncStorage.setItem(key, JSON.stringify(tripData));
+            console.log('outfit items overwritten successfully!');
+          } 
+        } catch (error) {
+          console.error('Failed to save outfit items:', error);
+        }
+      };
+      saveOutfits()
+    }, [outfits, key]);
+  
   // Calculate the difference in time (milliseconds) and then convert to days
-  const timeDifference = end - start;
-  const daysDifference = Math.floor(timeDifference / (1000 * 3600 * 24)) + 1;
+  // const timeDifference = end - start;
+  // const daysDifference = Math.floor(timeDifference / (1000 * 3600 * 24)) + 1;
 
   // State to manage the outfit data (outfit bullet points and image for each day)
   const [outfits, setOutfits] = useState(
