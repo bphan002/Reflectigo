@@ -77,14 +77,6 @@ export default function Outfits() {
   // const timeDifference = end - start;
   // const daysDifference = Math.floor(timeDifference / (1000 * 3600 * 24)) + 1;
 
-  // State to manage the outfit data (outfit bullet points and image for each day)
-  const [outfits, setOutfits] = useState(
-    Array.from({ length: daysDifference }).map(() => ({
-      bullets: [''],
-      imageUri: null,
-    }))
-  );
-
   // Request permission to access image picker (gallery)
   const requestImagePermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
