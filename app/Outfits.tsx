@@ -8,92 +8,104 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect } from 'react';
-import * as ImagePicker from 'expo-image-picker'; // Import expo-image-picker
+import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons'; // Import trashcan icon
-import app from './firebaseConfig'
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Outfits() {
-  const [outfits, setoutfits] = useState([
-    { id: '1', title: 'Toiletries', items: [], newItem: '' },
-    { id: '2', title: 'Clothing', items: [], newItem: '' },
-    { id: '3', title: 'Electronics', items: [], newItem: '' },
-    { id: '4', title: 'Documents', items: [], newItem: '' },
-  ]);
-  // console.log("uselocalsearchparams", useLocalSearchParams())
-  const { data } = useLocalSearchParams();
+  const { key, data } = useLocalSearchParams();
+  const { startDate, endDate } = JSON.parse(data);
 
+  const [outfits, setOutfits] = useState([]);
 
-    // Load packing items from AsyncStorage
-    useEffect(() => {
-      const loadOutfits = async () => {
-        try {
-          const savedItems = await AsyncStorage.getItem(key);
-            const parsedSavedItems = JSON.parse(savedItems);
-            if (parsedSavedItems.outfits) {
-  
-              // Create a deep copy of Outfits to avoid reference issues
-              const deepCopyOutfits = JSON.parse(JSON.stringify(parsedSavedItems)).outfits;   
-            setOutfits(deepCopyOutfits);
-          }
-        } catch (error) {
-          console.error('Failed to load packing items:', error);
+  useEffect(() => {
+    // Generate outfits dynamically based on the date range
+    const generateOutfits = () => {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+       // Reset time to 00:00:00 for both start and end dates
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+      const outfitsArray = [];
+
+      for (
+        let date = new Date(start);
+        date <= end;
+        date.setDate(date.getDate() + 1)
+      ) {
+        outfitsArray.push({
+          id: date.toISOString(),
+          date: date.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+          }),
+          bullets: [],
+          imageUri: null,
+        });
+      }
+      setOutfits(outfitsArray);
+    };
+
+    generateOutfits();
+  }, [startDate, endDate]);
+
+  // Save and load outfits from AsyncStorage
+  useEffect(() => {
+    const loadOutfits = async () => {
+      try {
+        const savedItems = await AsyncStorage.getItem(key);
+        const parsedSavedItems = JSON.parse(savedItems);
+        if (parsedSavedItems?.outfits) {
+          setOutfits(parsedSavedItems.outfits);
         }
-      };
-  
-      loadOutfits();
-    }, [key]);
-  
-    // Save packing items to AsyncStorage whenever they change
-    useEffect(() => {
-      console.log('this should trigger when outfits items change')
-  
-      const saveOutfits = async () => {
-        try {
-          // Step 1: Retrieve existing data from AsyncStorage
-          const existingTripData = await AsyncStorage.getItem(key);
-          console.log('existingtripdata', JSON.stringify(existingTripData,null,2))
-          // Step 2: Check if data exists and parse it
-          if (existingTripData) {
-            const tripData = JSON.parse(existingTripData);
-            console.log("what is the tripdata after parase", tripData)
-            // Step 3: Overwrite the Outfits property with the new Outfits
-            console.log('Packing Items:', JSON.stringify(outfits, null, 2));
-            tripData.outfits = outfits;
-            console.log('what is new tripdata with the outfit', JSON.stringify(tripData,null,2))
-            // Step 4: Save the updated object back to AsyncStorage
+      } catch (error) {
+        console.error('Failed to load outfits:', error);
+      }
+    };
+
+    loadOutfits();
+  }, [key]);
+
+  useEffect(() => {
+    const saveOutfits = async () => {
+      try {
+        const existingTripData = await AsyncStorage.getItem(key);
+        if (existingTripData) {
+          const tripData = JSON.parse(existingTripData);
+          tripData.outfits = outfits;
+          if (tripData.outfits) {
+            console.log('hit???')
+            console.log("what is tripData.outfits becaue its hitting", tripData.outfits)
             await AsyncStorage.setItem(key, JSON.stringify(tripData));
-            console.log('outfit items overwritten successfully!');
-          } 
-        } catch (error) {
-          console.error('Failed to save outfit items:', error);
+          }
         }
-      };
-      saveOutfits()
-    }, [outfits, key]);
-  
-  // Calculate the difference in time (milliseconds) and then convert to days
-  // const timeDifference = end - start;
-  // const daysDifference = Math.floor(timeDifference / (1000 * 3600 * 24)) + 1;
+      } catch (error) {
+        console.error('Failed to save outfits:', error);
+      }
+    };
 
-  // Request permission to access image picker (gallery)
+    saveOutfits();
+  }, [outfits]);
+
+  // Image and bullet management functions
   const requestImagePermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     return status === 'granted';
   };
 
-  // Request permission to use camera
   const requestCameraPermission = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     return status === 'granted';
   };
 
-  // Function to handle picking an image from the gallery
   const pickImage = async (index) => {
     const permissionGranted = await requestImagePermission();
     if (!permissionGranted) {
-      alert('Permission to access camera roll is required!');
+      alert('Permission to access the gallery is required!');
       return;
     }
 
@@ -106,16 +118,15 @@ export default function Outfits() {
 
     if (!result.canceled) {
       const updatedOutfits = [...outfits];
-      updatedOutfits[index].imageUri = result.assets[0].uri; // Set the picked image URI
+      updatedOutfits[index].imageUri = result.assets[0].uri;
       setOutfits(updatedOutfits);
     }
   };
 
-  // Function to handle taking a picture with the camera
   const takePicture = async (index) => {
     const permissionGranted = await requestCameraPermission();
     if (!permissionGranted) {
-      alert('Permission to access camera is required!');
+      alert('Permission to access the camera is required!');
       return;
     }
 
@@ -127,77 +138,63 @@ export default function Outfits() {
 
     if (!result.canceled) {
       const updatedOutfits = [...outfits];
-      updatedOutfits[index].imageUri = result.assets[0].uri; // Set the captured image URI
+      updatedOutfits[index].imageUri = result.assets[0].uri;
       setOutfits(updatedOutfits);
     }
   };
 
-  // Function to update the outfit bullet points for a specific day
   const updateBullet = (index, text, bulletIndex) => {
     const updatedOutfits = [...outfits];
     updatedOutfits[index].bullets[bulletIndex] = text;
     setOutfits(updatedOutfits);
   };
 
-  // Function to add a new bullet point for a specific day
   const addBullet = (index) => {
     const updatedOutfits = [...outfits];
     updatedOutfits[index].bullets.push('');
     setOutfits(updatedOutfits);
   };
 
-  // Function to delete a specific bullet point
   const deleteBullet = (index, bulletIndex) => {
     const updatedOutfits = [...outfits];
-    updatedOutfits[index].bullets.splice(bulletIndex, 1); // Remove the bullet at the specified index
+    updatedOutfits[index].bullets.splice(bulletIndex, 1);
     setOutfits(updatedOutfits);
   };
 
-  // Render function for each day
-  const renderItem = ({ item, index }) => {
-    const day = new Date(start.getTime() + index * 24 * 60 * 60 * 1000); // Increment each day
-    const formattedDate = day.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-    });
-
-    return (
-      <View style={styles.dayContainer}>
-        <View style={styles.leftColumn}>
-          <Text style={styles.dateText}>{formattedDate}</Text>
-          {item.bullets.map((bullet, bulletIndex) => (
-            <View key={bulletIndex} style={styles.bulletContainer}>
-              <Text style={styles.bullet}>•</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="What are you wearing?"
-                value={bullet}
-                onChangeText={(text) => updateBullet(index, text, bulletIndex)}
-              />
-              {/* Trashcan icon for deleting the bullet */}
-              <TouchableOpacity onPress={() => deleteBullet(index, bulletIndex)}>
-                <Ionicons name="trash" size={20} color="red" />
-              </TouchableOpacity>
-            </View>
-          ))}
-          <TouchableOpacity style={styles.addButton} onPress={() => addBullet(index)}>
-            <Text style={styles.addButtonText}>+ Add Bullet</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.rightColumn}>
-          <Image
-            source={{
-              uri: item.imageUri || 'https://img.icons8.com/?size=100&id=53386&format=png&color=000000'
-            }}
-            style={styles.imagePlaceholder}
-          />
-          <Button title="Pick Image" onPress={() => pickImage(index)} />
-          <Button title="Take Picture" onPress={() => takePicture(index)} />
-        </View>
+  const renderItem = ({ item, index }) => (
+    <View style={styles.dayContainer}>
+      <View style={styles.leftColumn}>
+        <Text style={styles.dateText}>{item.date}</Text>
+        {item.bullets.map((bullet, bulletIndex) => (
+          <View key={bulletIndex} style={styles.bulletContainer}>
+            <Text style={styles.bullet}>•</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="What are you wearing?"
+              value={bullet}
+              onChangeText={(text) => updateBullet(index, text, bulletIndex)}
+            />
+            <TouchableOpacity onPress={() => deleteBullet(index, bulletIndex)}>
+              <Ionicons name="trash" size={20} color="red" />
+            </TouchableOpacity>
+          </View>
+        ))}
+        <TouchableOpacity style={styles.addButton} onPress={() => addBullet(index)}>
+          <Text style={styles.addButtonText}>+ Add Bullet</Text>
+        </TouchableOpacity>
       </View>
-    );
-  };
+      <View style={styles.rightColumn}>
+        <Image
+          source={{
+            uri: item.imageUri || 'https://img.icons8.com/?size=100&id=53386&format=png&color=000000',
+          }}
+          style={styles.imagePlaceholder}
+        />
+        <Button title="Pick Image" onPress={() => pickImage(index)} />
+        <Button title="Take Picture" onPress={() => takePicture(index)} />
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -205,7 +202,7 @@ export default function Outfits() {
       <FlatList
         data={outfits}
         renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.id}
       />
     </View>
   );
