@@ -9,7 +9,7 @@ export default function TravelItinerary() {
     const [isMenuExpanded, setIsMenuExpanded] = useState(false); // Track whether the menu is expanded
     const animation = useRef(new Animated.Value(0)).current;
     console.log('tripData in travel itenary', JSON.stringify(tripData,null,2));
-
+    console.log("data in travel iteinerrary", data)
     const toggleMenu = () => {
         setIsMenuExpanded(prevState => !prevState); // Toggle the expanded state
 

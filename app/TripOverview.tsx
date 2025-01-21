@@ -2,10 +2,13 @@ import { Text, View, StyleSheet } from 'react-native';
 import Button from '@/components/Button';
 import { useRouter, Link } from 'expo-router';
 import app from './firebaseConfig'
+import { useLocalSearchParams } from 'expo-router';
 // <Link href={`/${option.replace(/\s+/g, '')}`} style={styles.linkButton}>
 // <Text style={styles.optionText}>{option}</Text>
 // </Link>
 export default function TripOverview() {
+  const { key, data } = useLocalSearchParams();
+  console.log("data in trip overview", data)
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Trip Overview</Text>
