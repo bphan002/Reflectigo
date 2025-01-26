@@ -1,72 +1,191 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, StyleSheet, Image } from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons'; // For transportation icons
 
 export default function Transportation() {
-  const [trips, setTrips] = useState([]);
-  const [loading, setLoading] = useState(true); // To handle loading state
+  const { key, data } = useLocalSearchParams();
+  const [transportation, setTransportation] = useState([]);
+  const [selectedMethod, setSelectedMethod] = useState(null); // Selected transportation method
+  const [to, setTo] = useState('');
+  const [from, setFrom] = useState('');
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  console.log('data', data)
+  // Load transportation data
+  useEffect(() => {
+    const loadTransportation = async () => {
+      try {
+        const savedTrip = await AsyncStorage.getItem(key);
+        const parsedSavedTrip = JSON.parse(savedTrip);
+        if (parsedSavedTrip?.transportation) {
+          setTransportation(parsedSavedTrip.transportation);
+        }
+      } catch (error) {
+        console.error('Failed to load transportation', error);
+      }
+    };
+    loadTransportation();
+  }, [key]);
 
-  // Function to load trips from AsyncStorage
-  const loadTrips = async () => {
-    try {
-      const allKeys = await AsyncStorage.getAllKeys();
-      const tripKeys = allKeys.filter((key) => key.startsWith('trip_'));
-  
-      const tripDataArray = await AsyncStorage.multiGet(tripKeys);
-      const trips = tripDataArray.map(([key, value]) => JSON.parse(value));
-      
-      return trips;
-    } catch (error) {
-      console.error('Error loading trips:', error);
-      return [];
-    }
+  // Save transportation data
+  useEffect(() => {
+    const saveTransportation = async () => {
+      try {
+        const existingTripData = await AsyncStorage.getItem(key);
+        if (existingTripData) {
+          const tripData = JSON.parse(existingTripData);
+          tripData.transportation = transportation;
+          await AsyncStorage.setItem(key, JSON.stringify(tripData));
+          console.log('Transportation data overwritten successfully!');
+        }
+      } catch (error) {
+        console.error('Failed to save transportation', error);
+      }
+    };
+    saveTransportation();
+  }, [transportation, key]);
+
+  // Handle method selection
+  const handleMethodSelect = (method) => {
+    setSelectedMethod(method);
   };
 
-  // Load trips when the component mounts
-  useEffect(() => {
-    const fetchTrips = async () => {
-      const tripsData = await loadTrips();
-      setTrips(tripsData);
-      setLoading(false);
-    };
-    fetchTrips();
-  }, []);
+  // Save inputs
+  const handleSave = () => {
+    const newEntry = { method: selectedMethod, to, from, date, time };
+    setTransportation((prev) => [...prev, newEntry]);
+    setSelectedMethod(null);
+    setTo('');
+    setFrom('');
+    setDate('');
+    setTime('');
+  };
 
-  // Handle loading state
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.text}>Loading...</Text>
-      </View>
-    );
-  }
-
-  // Display the first trip's image or fallback if no trips exist
-  const trip = trips[0]; // Example: Show the first trip in the list
-  console.log('what is trips????', trips)
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Transportation</Text>
-      {trip && trip.imageUrl ? (
-        <Image
-          source={{ uri: trip.imageUrl }} // Use the URL to display the image
-          style={{ width: 100, height: 100 }}
-        />
-      ) : (
-        <Text style={styles.text}>No trips available</Text>
+      <Text style={styles.title}>Transportation</Text>
+  
+      {/* Display Existing Transportation Data */}
+      {transportation.length > 0 && (
+        <View style={styles.existingDataContainer}>
+          <Text style={styles.subtitle}>Existing Transportation Records:</Text>
+          {transportation.map((entry, index) => (
+            <View key={index} style={styles.record}>
+              <Text>Method: {entry.method}</Text>
+              <Text>To: {entry.to}</Text>
+              <Text>From: {entry.from}</Text>
+              <Text>Date: {entry.date}</Text>
+              <Text>Time: {entry.time}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+  
+      {/* Transportation Method Selection */}
+      {!selectedMethod && (
+        <View style={styles.iconContainer}>
+          {['bus', 'train', 'car'].map((method) => (
+            <TouchableOpacity
+              key={method}
+              style={styles.iconButton}
+              onPress={() => handleMethodSelect(method)}
+            >
+              <Ionicons name={`md-${method}`} size={40} color="blue" />
+              <Text style={styles.iconText}>{method.charAt(0).toUpperCase() + method.slice(1)}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+  
+      {/* Input Fields for Selected Method */}
+      {selectedMethod && (
+        <View style={styles.inputContainer}>
+          <Text style={styles.subtitle}>{selectedMethod.toUpperCase()}</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="To"
+            value={to}
+            onChangeText={setTo}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="From"
+            value={from}
+            onChangeText={setFrom}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Date (YYYY-MM-DD)"
+            value={date}
+            onChangeText={setDate}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Time (HH:MM)"
+            value={time}
+            onChangeText={setTime}
+          />
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Text style={styles.saveButtonText}>Save</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
 }
+  
+  
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#25292e',
-    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
+  iconButton: {
     alignItems: 'center',
   },
-  text: {
+  iconText: {
+    marginTop: 5,
+    fontSize: 16,
+  },
+  inputContainer: {
+    marginTop: 20,
+  },
+  subtitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    fontSize: 16,
+  },
+  saveButton: {
+    backgroundColor: 'blue',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  saveButtonText: {
     color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
