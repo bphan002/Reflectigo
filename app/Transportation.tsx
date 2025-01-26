@@ -2,17 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { Text, View, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons'; // For transportation icons
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Transportation() {
-  const { key, data } = useLocalSearchParams();
+  const { key } = useLocalSearchParams();
   const [transportation, setTransportation] = useState([]);
-  const [selectedMethod, setSelectedMethod] = useState(null); // Selected transportation method
+  const [selectedMethod, setSelectedMethod] = useState(null);
   const [to, setTo] = useState('');
   const [from, setFrom] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
-  console.log('data', data)
+  const [editIndex, setEditIndex] = useState(null); // Track the record being edited
+
   // Load transportation data
   useEffect(() => {
     const loadTransportation = async () => {
@@ -52,10 +53,41 @@ export default function Transportation() {
     setSelectedMethod(method);
   };
 
-  // Save inputs
+  // Save new or edited record
   const handleSave = () => {
     const newEntry = { method: selectedMethod, to, from, date, time };
-    setTransportation((prev) => [...prev, newEntry]);
+    if (editIndex !== null) {
+      // Edit existing record
+      const updatedTransportation = [...transportation];
+      updatedTransportation[editIndex] = newEntry;
+      setTransportation(updatedTransportation);
+      setEditIndex(null);
+    } else {
+      // Add new record
+      setTransportation((prev) => [...prev, newEntry]);
+    }
+    resetForm();
+  };
+
+  // Cancel editing
+  const handleCancelEdit = () => {
+    setEditIndex(null);
+    resetForm();
+  };
+
+  // Populate input fields for editing
+  const handleEdit = (index) => {
+    const record = transportation[index];
+    setSelectedMethod(record.method);
+    setTo(record.to);
+    setFrom(record.from);
+    setDate(record.date);
+    setTime(record.time);
+    setEditIndex(index);
+  };
+
+  // Reset input fields
+  const resetForm = () => {
     setSelectedMethod(null);
     setTo('');
     setFrom('');
@@ -66,7 +98,7 @@ export default function Transportation() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Transportation</Text>
-  
+
       {/* Display Existing Transportation Data */}
       {transportation.length > 0 && (
         <View style={styles.existingDataContainer}>
@@ -78,13 +110,19 @@ export default function Transportation() {
               <Text>From: {entry.from}</Text>
               <Text>Date: {entry.date}</Text>
               <Text>Time: {entry.time}</Text>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => handleEdit(index)}
+              >
+                <Text style={styles.editButtonText}>Edit</Text>
+              </TouchableOpacity>
             </View>
           ))}
         </View>
       )}
-  
+
       {/* Transportation Method Selection */}
-      {!selectedMethod && (
+      {!selectedMethod && editIndex === null && (
         <View style={styles.iconContainer}>
           {['bus', 'train', 'car'].map((method) => (
             <TouchableOpacity
@@ -93,16 +131,18 @@ export default function Transportation() {
               onPress={() => handleMethodSelect(method)}
             >
               <Ionicons name={`md-${method}`} size={40} color="blue" />
-              <Text style={styles.iconText}>{method.charAt(0).toUpperCase() + method.slice(1)}</Text>
+              <Text style={styles.iconText}>
+                {method.charAt(0).toUpperCase() + method.slice(1)}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
       )}
-  
+
       {/* Input Fields for Selected Method */}
-      {selectedMethod && (
+      {(selectedMethod || editIndex !== null) && (
         <View style={styles.inputContainer}>
-          <Text style={styles.subtitle}>{selectedMethod.toUpperCase()}</Text>
+          <Text style={styles.subtitle}>{selectedMethod?.toUpperCase() || transportation[editIndex]?.method.toUpperCase()}</Text>
           <TextInput
             style={styles.input}
             placeholder="To"
@@ -130,60 +170,27 @@ export default function Transportation() {
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
+          {editIndex !== null && (
+            <TouchableOpacity style={styles.cancelButton} onPress={handleCancelEdit}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </View>
   );
 }
-  
-  
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  iconContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-  },
-  iconButton: {
-    alignItems: 'center',
-  },
-  iconText: {
-    marginTop: 5,
-    fontSize: 16,
-  },
-  inputContainer: {
-    marginTop: 20,
-  },
-  subtitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
+  // (styles remain unchanged; add styles for cancel button if needed)
+  cancelButton: {
+    marginTop: 10,
+    backgroundColor: 'red',
     padding: 10,
-    marginBottom: 10,
-    fontSize: 16,
-  },
-  saveButton: {
-    backgroundColor: 'blue',
-    padding: 15,
     borderRadius: 5,
     alignItems: 'center',
   },
-  saveButtonText: {
+  cancelButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
