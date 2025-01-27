@@ -170,6 +170,14 @@ export default function Transportation() {
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
+          {editIndex === null && (
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => setSelectedMethod(null)}
+      >
+        <Text style={styles.backButtonText}>Back</Text>
+      </TouchableOpacity>
+    )}
           {editIndex !== null && (
             <TouchableOpacity style={styles.cancelButton} onPress={handleCancelEdit}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -191,6 +199,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  backButton: {
+    marginTop: 10,
+    backgroundColor: 'gray',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  backButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
